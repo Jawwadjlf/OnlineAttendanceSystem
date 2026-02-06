@@ -8,7 +8,9 @@
   <title>CR Attendance – COMSATS Enhanced</title>
   
   <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="./manifest.json">
+
+
   
   <!-- Chart.js for Analytics -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -712,7 +714,7 @@
 
     // Register Service Worker (PWA)
     if (supportsPWA()) {
-      navigator.serviceWorker.register('/service-worker.js').then(() => {
+      navigator.serviceWorker.register('./service-worker.js').then(() => {
         console.log('✅ Service Worker registered successfully');
       }).catch(e => {
         console.log('⚠️ SW registration failed:', e.message);
@@ -721,4 +723,5 @@
   </script>
 </body>
 </html>
+
 
