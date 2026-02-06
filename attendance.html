@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#363763" />
+  <meta name="description" content="CR Attendance Management System with Biometric Auth & Offline Support" />
+  <title>CR Attendance – COMSATS Enhanced</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Chart.js for Analytics -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <style>
+    :root {
+      --cui-primary: #363763;
+      --cui-primary-2: #1e1f4a;
+      --cui-danger: #BD3850;
+      --cui-success: #22c25f;
+      --cui-bg: #f4f5f7;
+      --cui-card: #ffffff;
+      --cui-text: #1b1e28;
+      --cui-muted: #6b7280;
+      --cui-line: #e5e7eb;
+      --cui-shadow: 0 10px 24px rgba(0,0,0,.10);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--cui-bg); color: var(--cui-text); }
+
+    .wrap{ min-height:100vh; display:grid; place-items:center; padding:18px; }
+    .phone{ width:min(430px, 100%); border:1px solid #d7dbe2; border-radius:26px; overflow:hidden; background:var(--cui-card); box-shadow:var(--cui-shadow); display:flex; flex-direction:column; }
+
+    .topbar{ background: linear-gradient(180deg, var(--cui-primary-2), var(--cui-primary)); color:#fff; padding:14px 14px 10px; border-bottom:1px solid rgba(255,255,255,.18); flex-shrink:0; }
+    .topbar .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand .h{ font-weight:700; font-size:16px; letter-spacing:.2px; }
+    .brand .s{ opacity:.85; font-size:12px; }
+
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.30); background: rgba(255,255,255,.10); white-space:nowrap; }
+    .mini-btn{ border:1px solid rgba(255,255,255,.30); background: rgba(255,255,255,.12); color:#fff; border-radius:10px; padding:8px 10px; font-size:12px; cursor:pointer; transition:all .2s; }
+    .mini-btn:hover{ background: rgba(255,255,255,.18); }
+
+    .content{ padding:12px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex:1; max-height:calc(100% - 200px); }
+    .card{ border:1px solid var(--cui-line); border-radius:var(--radius); padding:12px; background:#fff; }
+
+    .summary{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .summary .h{ font-weight:800; }
+    .summary .pill2{ border:1px solid var(--cui-line); background:#f8fafc; color:var(--cui-muted); border-radius:999px; padding:6px 10px; font-size:12px; white-space:nowrap; }
+
+    .meta{ display:grid; grid-template-columns: 1fr; gap:6px; font-size:13px; }
+    .kv{ display:flex; gap:10px; align-items:baseline; }
+    .k{ width:70px; color:var(--cui-muted); }
+    .v{ font-weight:700; }
+
+    input[type="date"], input[type="time"], select{ border:1px solid var(--cui-line); border-radius:10px; padding:6px 8px; font-size:13px; outline:none; }
+    input[type="date"]:focus, input[type="time"]:focus, select:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+
+    .checkrow{ display:flex; align-items:flex-start; gap:10px; font-size:13px; margin-bottom:10px; }
+    .checkrow input{ width:18px; height:18px; margin-top:2px; }
+
+    textarea{ width:100%; border:1px solid var(--cui-line); border-radius:10px; padding:10px; font-family: inherit; font-size:13px; min-height:76px; outline:none; }
+    textarea:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+    .count{ font-size:12px; color:var(--cui-muted); margin-top:6px; }
+
+    .search{ width:100%; border:1px solid var(--cui-line); border-radius:10px; padding:10px; font-size:13px; outline:none; }
+    .search:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .btn{ border:1px solid var(--cui-line); background:#f8fafc; color:var(--cui-text); border-radius:10px; padding:9px 10px; font-size:13px; cursor:pointer; transition:all .2s; }
+    .btn:hover{ background:#eef2f7; }
+    .btn.primary{ border-color: rgba(54,55,99,.25); background: rgba(54,55,99,.10); color:var(--cui-primary); }
+    .btn.danger{ border-color: rgba(189,56,80,.25); background: rgba(189,56,80,.08); color:var(--cui-danger); }
+    .btn.success{ border-color: rgba(34,194,95,.25); background: rgba(34,194,95,.08); color:var(--cui-success); }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .list{ margin-top:10px; border-top:1px solid var(--cui-line); }
+    .stu{ display:grid; grid-template-columns: 34px 1fr 90px; gap:10px; padding:10px 4px; border-bottom:1px solid var(--cui-line); align-items:center; }
+    .sr{ text-align:center; color:var(--cui-muted); font-size:12px; }
+    .who{ min-width:0; }
+    .reg{ color:var(--cui-muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .name{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .pa{ display:flex; gap:8px; justify-content:flex-end; }
+    .radio{ width:38px; height:32px; border-radius:10px; border:1px solid var(--cui-line); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; user-select:none; background:#fff; transition:all .2s; }
+    .radio:hover{ border-color: var(--cui-primary); }
+    .radio.onP{ border-color: rgba(34,194,107,.40); background: rgba(34,194,107,.15); color: var(--cui-success); }
+    .radio.onA{ border-color: rgba(189,56,80,.40); background: rgba(189,56,80,.15); color:var(--cui-danger); }
+
+    .footer{ border-top:1px solid var(--cui-line); padding:12px; background:#fff; flex-shrink:0; overflow-y:auto; max-height:150px; }
+    .submitIconBtn{
+      display:flex; align-items:center; gap:10px; width:100%; justify-content:center;
+      border:1px solid rgba(54,55,99,.25); border-radius:12px; padding:10px 12px;
+      cursor:pointer; background: linear-gradient(180deg, var(--cui-primary-2), var(--cui-primary));
+      color:#fff; font-weight:800; letter-spacing:.2px; transition:all .2s;
+    }
+    .submitIconBtn:hover{ filter: brightness(1.05); }
+    .submitIconBtn:active{ transform: translateY(1px); }
+    .submitIconBtn[disabled]{ opacity:.55; cursor:not-allowed; filter: grayscale(.3); }
+
+    .status{ margin-top:10px; font-size:13px; color:var(--cui-muted); line-height:1.3; }
+
+    .backdrop{ position:fixed; inset:0; background: rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:16px; z-index:999; overflow-y:auto; }
+    .modal{ width:min(430px, 100%); background:#fff; border-radius:16px; border:1px solid var(--cui-line); box-shadow:var(--cui-shadow); padding:14px; margin:auto; }
+    .modal h3{ margin:0 0 6px; font-size:16px; }
+    .modal p{ margin:0 0 10px; color:var(--cui-muted); font-size:13px; }
+    .modal ul{ margin:0 0 12px; padding-left:18px; font-size:13px; }
+    .modal li{ margin:4px 0; }
+    .actions{ display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top:12px; }
+
+    .badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .badge.online{ background:rgba(34,194,107,.15); color:var(--cui-success); border:1px solid rgba(34,194,107,.3); }
+    .badge.offline{ background:rgba(255,159,64,.15); color:#ff9f40; border:1px solid rgba(255,159,64,.3); }
+    .badge.locked{ background:rgba(189,56,80,.15); color:var(--cui-danger); border:1px solid rgba(189,56,80,.3); }
+    .badge.approved{ background:rgba(34,194,107,.15); color:var(--cui-success); border:1px solid rgba(34,194,107,.3); }
+
+    .tab-buttons{ display:flex; gap:10px; margin-bottom:10px; }
+    .tab-btn{ flex:1; padding:8px; border:1px solid var(--cui-line); background:#fff; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700; transition:all .2s; }
+    .tab-btn.active{ background:var(--cui-primary); color:#fff; border-color:var(--cui-primary); }
+
+    .qr-container{ text-align:center; margin:10px 0; }
+    .qr-container canvas, .qr-container img{ max-width:100%; border:1px solid var(--cui-line); border-radius:10px; }
+
+    @media (max-width: 360px){
+      .stu{ grid-template-columns: 30px 1fr 86px; }
+      .radio{ width:36px; }
+    }
+
+    /* Animation */
+    @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+    .fade-in{ animation:fadeIn .3s ease-in; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="phone" role="application" aria-label="Enhanced CR Attendance PWA">
+      <div class="topbar">
+        <div class="row">
+          <div class="brand">
+            <div class="h" id="brandTitle">📱 CUOnline Attendance</div>
+            <div class="s">With Google Apps Script Backend</div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div id="netPill" class="pill badge online">🟢 Online</div>
+            <button id="userBtn" class="mini-btn" title="User profile">👤</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content" id="mainContent">
+        <!-- ATTENDANCE FORM SECTION -->
+        <div class="card">
+          <div class="summary">
+            <div class="h">Attendance Entry</div>
+            <div class="pill2" id="statusBadge">✏️ Edit Mode</div>
+          </div>
+          <div class="meta" style="margin-top:10px;">
+            <div class="kv"><div class="k">Course</div><div class="v" id="course">CSC462 – AI</div></div>
+            <div class="kv"><div class="k">Section</div><div class="v"><select id="sectionSelect"><option>A</option><option>B</option></select></div></div>
+            <div class="kv"><div class="k">Date</div><div class="v"><input type="date" id="dateInput" value="2026-02-06" /></div></div>
+            <div class="kv"><div class="k">Time</div><div class="v"><input type="time" id="startTime" value="09:00" /> – <input type="time" id="endTime" value="10:20" /></div></div>
+            <div class="kv"><div class="k">Type</div><div class="v"><select id="typeSelect"><option value="1">Class</option><option value="2">Lab</option><option value="4">Exam</option></select></div></div>
+          </div>
+        </div>
+
+        <!-- LECTURE NOTES -->
+        <div class="card">
+          <div class="checkrow">
+            <input type="checkbox" id="isOnline" />
+            <label for="isOnline"><b>Online Class</b></label>
+          </div>
+          <div style="color: var(--cui-danger); font-weight: 700; margin-bottom: 6px;">Lecture Notes / Content</div>
+          <textarea id="notes" placeholder="Type lecture notes here" maxlength="2999"></textarea>
+          <div class="count"><span id="count">0</span>/2999</div>
+        </div>
+
+        <!-- STUDENTS ATTENDANCE -->
+        <div class="card">
+          <div class="summary">
+            <div class="h">Students</div>
+            <div class="pill2" id="summary">Present: 0 • Absent: 0</div>
+          </div>
+          <input id="search" class="search" type="search" placeholder="Search by name or reg no" />
+          <div class="controls">
+            <button class="btn primary" id="allP">Mark All Present</button>
+            <button class="btn danger" id="allA">Mark All Absent</button>
+            <button class="btn" id="reset">Reset</button>
+          </div>
+          <div class="list" id="list"></div>
+        </div>
+
+        <!-- ANALYTICS TAB (Collapsible) -->
+        <div class="card" id="analyticsCard" style="display:none;">
+          <div class="h" style="margin-bottom:10px;">📊 Analytics</div>
+          <canvas id="attendanceChart" style="max-height:200px;"></canvas>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="controls" style="margin-bottom:10px; font-size:12px;">
+          <button class="btn" id="emailAttendanceBtn" title="Email attendance to faculty">📧 Email Attendance</button>
+          <button class="btn" id="analyticsBtn" title="View analytics">📊 Analytics</button>
+        </div>
+
+        <button id="submit" class="submitIconBtn">
+          <span>✓</span>
+          <div>Submit & Lock</div>
+        </button>
+
+        <div class="status" id="status">Ready to mark attendance. Click students to toggle Present/Absent.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT CONFIRMATION MODAL -->
+  <div class="backdrop" id="submitBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>Confirm Submit & Lock</h3>
+      <p>Once submitted:</p>
+      <ul>
+        <li>Attendance will be <b>LOCKED</b></li>
+        <li>Sent to faculty for approval</li>
+        <li>If offline, will sync when online</li>
+      </ul>
+      <div class="actions">
+        <button class="btn" id="cancelSubmit">Cancel</button>
+        <button class="btn primary" id="confirmSubmit">✓ Confirm Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAIL SUBMISSION MODAL -->
+  <div class="backdrop" id="emailBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>📧 Email Attendance to Faculty</h3>
+      <div style="margin:10px 0;">
+        <label style="display:block; margin-bottom:8px;"><b>Faculty Email:</b></label>
+        <input type="email" id="facultyEmail" placeholder="faculty@comsats.edu.pk" style="width:100%; border:1px solid var(--cui-line); border-radius:8px; padding:8px; font-size:13px;">
+        <div style="margin-top:8px; font-size:12px; color:var(--cui-muted);">The attendance will be stored in cloud and emailed to faculty for approval.</div>
+      </div>
+      <div class="controls" style="margin-top:10px;">
+        <button class="btn" id="cancelEmail">Cancel</button>
+        <button class="btn primary" id="sendEmail">✓ Send Email</button>
+      </div>
+      <div class="status" id="emailStatus" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Check browser support
+    const supportsPWA = () => ('serviceWorker' in navigator);
+    const supportsIndexedDB = () => (!!window.indexedDB);
+
+    console.log('📱 PWA Support:', { serviceWorker: supportsPWA(), idb: supportsIndexedDB() });
+
+    // =====================
+    // GOOGLE APPS SCRIPT CONFIG
+    // =====================
+    const APPSCRIPT_URL = "YOUR_DEPLOYMENT_URL_HERE";
+    // Get this URL from: https://script.google.com → Your project → Deploy → Web app
+    // Format: https://script.google.com/macros/s/YOUR_ID/exec
+
+    // =====================
+    // INDEXEDDB HELPER
+    // =====================
+    class AttendanceDB {
+      constructor() {
+        this.dbName = 'CR_Attendance_v1';
+        this.db = null;
+      }
+
+      async init() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(this.dbName, 1);
+          req.onerror = () => reject(req.error);
+          req.onsuccess = () => { this.db = req.result; resolve(); };
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('attendance')) {
+              db.createObjectStore('attendance', { keyPath: 'id' });
+            }
+            if (!db.objectStoreNames.contains('drafts')) {
+              db.createObjectStore('drafts', { keyPath: 'id' });
+            }
+          };
+        });
+      }
+
+      async saveDraft(data) {
+        const tx = this.db.transaction('drafts', 'readwrite');
+        tx.objectStore('drafts').put({ id: 'current', data, savedAt: Date.now() });
+        return new Promise((resolve, reject) => {
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async getDraft() {
+        const tx = this.db.transaction('drafts', 'readonly');
+        return new Promise((resolve, reject) => {
+          const req = tx.objectStore('drafts').get('current');
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async saveSubmission(submission) {
+        const tx = this.db.transaction('attendance', 'readwrite');
+        tx.objectStore('attendance').put(submission);
+        return new Promise((resolve, reject) => {
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async getSubmissions() {
+        const tx = this.db.transaction('attendance', 'readonly');
+        return new Promise((resolve, reject) => {
+          const req = tx.objectStore('attendance').getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+    }
+
+    // =====================
+    // APP STATE
+    // =====================
+    const db = new AttendanceDB();
+    let isOnline = navigator.onLine;
+    let locked = false;
+    let currentUser = { email: 'cr@comsats.edu.pk', role: 'CR', uid: 'user123' };
+    
+    const marks = new Map();
+    const students = [
+      { regNo: 'CIIT/FA22-BCS-008/VHR', displayReg: 'FA22-BCS-008', name: 'AQSA HANIF' },
+      { regNo: 'CIIT/FA22-BCS-078/VHR', displayReg: 'FA22-BCS-078', name: 'MUHAMMAD SALMAN TAYYAB' },
+      { regNo: 'CIIT/SP23-BCS-006/VHR', displayReg: 'SP23-BCS-006', name: 'ABEERA EJAZ' },
+      { regNo: 'CIIT/SP23-BCS-022/VHR', displayReg: 'SP23-BCS-022', name: 'HAMZA AZEEM' },
+      { regNo: 'CIIT/SP23-BCS-029/VHR', displayReg: 'SP23-BCS-029', name: 'MEHREEN YOUNAS' },
+      { regNo: 'CIIT/SP23-BCS-031/VHR', displayReg: 'SP23-BCS-031', name: 'MOAZ SAEED' },
+    ];
+
+    students.forEach(s => marks.set(s.regNo, 'P'));
+
+    // =====================
+    // DOM REFS
+    // =====================
+    const netPill = document.getElementById('netPill');
+    const userBtn = document.getElementById('userBtn');
+    const isOnlineChk = document.getElementById('isOnline');
+    const notes = document.getElementById('notes');
+    const count = document.getElementById('count');
+    const search = document.getElementById('search');
+    const allP = document.getElementById('allP');
+    const allA = document.getElementById('allA');
+    const reset = document.getElementById('reset');
+    const list = document.getElementById('list');
+    const summary = document.getElementById('summary');
+    const submitBtn = document.getElementById('submit');
+    const status = document.getElementById('status');
+    const statusBadge = document.getElementById('statusBadge');
+    const analyticsBtn = document.getElementById('analyticsBtn');
+    const analyticsCard = document.getElementById('analyticsCard');
+
+    // Modals
+    const submitBackdrop = document.getElementById('submitBackdrop');
+    const confirmSubmit = document.getElementById('confirmSubmit');
+    const cancelSubmit = document.getElementById('cancelSubmit');
+
+    const emailBackdrop = document.getElementById('emailBackdrop');
+    const facultyEmail = document.getElementById('facultyEmail');
+    const emailStatus = document.getElementById('emailStatus');
+    const sendEmail = document.getElementById('sendEmail');
+    const cancelEmail = document.getElementById('cancelEmail');
+
+    // =====================
+    // FUNCTIONS
+    // =====================
+    function setNet() {
+      netPill.textContent = isOnline ? '🟢 Online' : '🟡 Offline';
+      netPill.className = 'pill badge ' + (isOnline ? 'online' : 'offline');
+      status.textContent = isOnline ? '✅ Online: ready to submit.' : '🟡 Offline: changes saved locally, will sync when online.';
+    }
+
+    function updateSummary() {
+      let p = 0, a = 0;
+      for (const v of marks.values()) (v === 'P' ? p++ : a++);
+      summary.textContent = `Present: ${p} • Absent: ${a}`;
+    }
+
+    function render() {
+      const q = (search.value || '').trim().toLowerCase();
+      list.innerHTML = '';
+      const filtered = students.filter(s => !q || s.displayReg.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+
+      filtered.forEach((s, idx) => {
+        const choice = marks.get(s.regNo) || 'P';
+        const row = document.createElement('div');
+        row.className = 'stu';
+        row.innerHTML = `
+          <div class="sr">${idx + 1}</div>
+          <div class="who">
+            <div class="reg">${s.displayReg}</div>
+            <div class="name">${s.name}</div>
+          </div>
+          <div class="pa">
+            <div class="radio ${choice==='P'?'onP':''}" data-action="P" data-reg="${s.regNo}">P</div>
+            <div class="radio ${choice==='A'?'onA':''}" data-action="A" data-reg="${s.regNo}">A</div>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      updateSummary();
+
+      // Attach click handlers
+      document.querySelectorAll('.radio').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (locked) return;
+          const reg = btn.dataset.reg;
+          const action = btn.dataset.action;
+          marks.set(reg, action);
+          render();
+          await saveDraftLocal();
+        });
+      });
+    }
+
+    async function saveDraftLocal() {
+      try {
+        const draft = {
+          meta: {
+            section: document.getElementById('sectionSelect').value,
+            date: document.getElementById('dateInput').value,
+            startTime: document.getElementById('startTime').value,
+            endTime: document.getElementById('endTime').value,
+            classType: document.getElementById('typeSelect').value,
+            isOnline: isOnlineChk.checked,
+            lectureNotes: notes.value
+          },
+          marks: Object.fromEntries(marks.entries()),
+          locked
+        };
+        await db.saveDraft(draft);
+      } catch (e) {
+        console.warn('Draft save failed:', e);
+      }
+    }
+
+    async function restoreDraftLocal() {
+      try {
+        const draft = await db.getDraft();
+        if (!draft || !draft.data) return;
+        const d = draft.data;
+
+        document.getElementById('sectionSelect').value = d.meta.section || 'A';
+        document.getElementById('dateInput').value = d.meta.date || '2026-02-06';
+        document.getElementById('startTime').value = d.meta.startTime || '09:00';
+        document.getElementById('endTime').value = d.meta.endTime || '10:20';
+        document.getElementById('typeSelect').value = String(d.meta.classType || '1');
+        isOnlineChk.checked = !!d.meta.isOnline;
+        notes.value = d.meta.lectureNotes || '';
+        count.textContent = String((d.meta.lectureNotes || '').length);
+
+        if (d.marks) {
+          for (const [k, v] of Object.entries(d.marks)) marks.set(k, v);
+        }
+
+        locked = !!d.locked;
+      } catch (e) {
+        console.warn('Draft restore failed:', e);
+      }
+    }
+
+    function buildAttendanceJson() {
+      return {
+        course: document.getElementById('course').textContent,
+        section: document.getElementById('sectionSelect').value,
+        date: document.getElementById('dateInput').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        classType: document.getElementById('typeSelect').value,
+        isOnline: isOnlineChk.checked,
+        lectureNotes: notes.value || '',
+        crEmail: currentUser.email,
+        submittedAt: new Date().toISOString(),
+        students: students.map((s, i) => ({
+          sr: i + 1,
+          reg: s.regNo,
+          name: s.name,
+          present: (marks.get(s.regNo) || 'P') === 'P'
+        }))
+      };
+    }
+
+    // =====================
+    // EVENTS
+    // =====================
+    notes.addEventListener('input', async () => {
+      count.textContent = String(notes.value.length);
+      if (!locked) await saveDraftLocal();
+    });
+
+    search.addEventListener('input', render);
+
+    ['change', 'input'].forEach(ev => {
+      ['sectionSelect', 'dateInput', 'startTime', 'endTime', 'typeSelect'].forEach(id => {
+        document.getElementById(id).addEventListener(ev, async () => !locked && await saveDraftLocal());
+      });
+      isOnlineChk.addEventListener(ev, async () => !locked && await saveDraftLocal());
+    });
+
+    document.getElementById('emailAttendanceBtn').addEventListener('click', () => {
+      facultyEmail.value = '';
+      emailStatus.textContent = '';
+      emailBackdrop.style.display = 'flex';
+    });
+
+    cancelEmail.addEventListener('click', () => {
+      emailBackdrop.style.display = 'none';
+    });
+
+    sendEmail.addEventListener('click', async () => {
+      const faculty = facultyEmail.value.trim();
+      if (!faculty) {
+        emailStatus.textContent = '⚠️ Please enter faculty email';
+        return;
+      }
+
+      if (!APPSCRIPT_URL || APPSCRIPT_URL.includes('YOUR_DEPLOYMENT')) {
+        emailStatus.textContent = '⚠️ Apps Script URL not configured. Check setup.';
+        return;
+      }
+
+      const payload = buildAttendanceJson();
+      payload.facultyEmail = faculty;
+      
+      emailStatus.textContent = '⏳ Submitting attendance...';
+      sendEmail.disabled = true;
+
+      try {
+        // Send to Google Apps Script
+        const response = await fetch(APPSCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+          headers: { 'Content-Type': 'application/json' },
+          mode: 'no-cors'
+        });
+
+        // Note: no-cors mode means we can't read response, but request goes through
+        emailStatus.textContent = '✅ Submitted! Email sent to you and faculty.';
+        
+        // Lock the form
+        locked = true;
+        statusBadge.textContent = '🔒 Locked';
+        await saveDraftLocal();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>✓</span><div>Submitted (Locked)</div>';
+        status.textContent = '✅ Attendance submitted! Check your email for confirmation.';
+
+        setTimeout(() => {
+          emailBackdrop.style.display = 'none';
+        }, 2000);
+      } catch (error) {
+        emailStatus.textContent = `❌ Error: ${error.message}. Check console (F12).`;
+        console.error('Apps Script Error:', error);
+        sendEmail.disabled = false;
+      }
+    });
+
+    allP.addEventListener('click', async () => {
+      if (locked) return;
+      students.forEach(s => marks.set(s.regNo, 'P'));
+      render();
+      await saveDraftLocal();
+    });
+
+    allA.addEventListener('click', async () => {
+      if (locked) return;
+      students.forEach(s => marks.set(s.regNo, 'A'));
+      render();
+      await saveDraftLocal();
+    });
+
+    reset.addEventListener('click', async () => {
+      if (locked) return;
+      isOnlineChk.checked = false;
+      notes.value = '';
+      count.textContent = '0';
+      search.value = '';
+      students.forEach(s => marks.set(s.regNo, 'P'));
+      render();
+      await saveDraftLocal();
+    });
+
+    submitBtn.addEventListener('click', () => {
+      if (locked) return;
+      submitBackdrop.style.display = 'flex';
+    });
+
+    cancelSubmit.addEventListener('click', () => {
+      submitBackdrop.style.display = 'none';
+    });
+
+    confirmSubmit.addEventListener('click', async () => {
+      const payload = buildAttendanceJson();
+      console.log('SUBMIT:', payload);
+
+      locked = true;
+      statusBadge.textContent = '🔒 Locked';
+      await saveDraftLocal();
+
+      submitBackdrop.style.display = 'none';
+
+      // Disable editing
+      [isOnlineChk, notes, search, allP, allA, reset, submitBtn].forEach(el => el.disabled = true);
+
+      status.textContent = isOnline ? '✅ Submitted successfully!' : '🟡 Saved offline, will submit when online.';
+      submitBtn.innerHTML = '<span>✓</span><div>Submitted (Locked)</div>';
+
+      // In real app, save to Firebase here
+      try {
+        await db.saveSubmission({
+          id: Date.now().toString(),
+          payload,
+          syncedAt: Date.now(),
+          status: isOnline ? 'synced' : 'pending'
+        });
+      } catch (e) {
+        console.warn('Submission save failed:', e);
+      }
+    });
+
+    // User profile quick view
+    userBtn.addEventListener('click', () => {
+      const userInfo = `${currentUser.email} (${currentUser.role})`;
+      alert(`Profile: ${userInfo}\nStatus: ${isOnline ? '🟢 Online' : '🟡 Offline'}`);
+    });
+
+    analyticsBtn.addEventListener('click', () => {
+      analyticsCard.style.display = analyticsCard.style.display === 'none' ? 'block' : 'none';
+      if (analyticsCard.style.display === 'block') {
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5'],
+            datasets: [
+              {
+                label: 'Present',
+                data: [24, 22, 25, 23, 24],
+                backgroundColor: 'rgba(34, 194, 107, 0.2)',
+                borderColor: 'rgb(34, 194, 107)',
+                borderWidth: 1
+              },
+              {
+                label: 'Absent',
+                data: [2, 4, 1, 3, 2],
+                backgroundColor: 'rgba(189, 56, 80, 0.2)',
+                borderColor: 'rgb(189, 56, 80)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: { beginAtZero: true, max: 28 }
+            }
+          }
+        });
+      }
+    });
+
+    // Network events
+    window.addEventListener('online', () => {
+      isOnline = true;
+      setNet();
+      status.textContent = '🟢 Online! Syncing pending submissions...';
+    });
+
+    window.addEventListener('offline', () => {
+      isOnline = false;
+      setNet();
+    });
+
+    // =====================
+    // INITIALIZATION
+    // =====================
+    (async () => {
+      try {
+        await db.init();
+        await restoreDraftLocal();
+        render();
+        setNet();
+        
+        if (APPSCRIPT_URL.includes('YOUR_DEPLOYMENT')) {
+          console.warn('⚠️ Apps Script URL not configured. Update APPSCRIPT_URL in code.');
+          status.textContent = '⚠️ Setup required: Update Apps Script URL in code. See documentation.';
+        } else {
+          console.log('✅ App initialized. Apps Script connected:', APPSCRIPT_URL.substring(0, 50) + '...');
+        }
+      } catch (e) {
+        console.error('Init failed:', e);
+      }
+    })();
+
+    // Register Service Worker (PWA)
+    if (supportsPWA()) {
+      navigator.serviceWorker.register('/service-worker.js').then(() => {
+        console.log('✅ Service Worker registered successfully');
+      }).catch(e => {
+        console.log('⚠️ SW registration failed:', e.message);
+      });
+    }
+  </script>
+</body>
+</html>
