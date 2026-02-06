@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#363763" />
+  <title>My Attendance - Muhammad Jawad Rafeeq</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <style>
+    :root {
+      --cui-primary: #363763;
+      --cui-primary-2: #1e1f4a;
+      --cui-danger: #BD3850;
+      --cui-success: #22c25f;
+      --cui-bg: #f4f5f7;
+      --cui-card: #ffffff;
+      --cui-text: #1b1e28;
+      --cui-muted: #6b7280;
+      --cui-line: #e5e7eb;
+      --cui-shadow: 0 10px 24px rgba(0,0,0,.10);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: var(--cui-bg); color: var(--cui-text); }
+
+    .wrap{ min-height:100vh; display:grid; place-items:center; padding:18px; }
+    .phone{ width:min(430px, 100%); border:1px solid #d7dbe2; border-radius:26px; overflow:hidden; background:var(--cui-card); box-shadow:var(--cui-shadow); display:flex; flex-direction:column; }
+
+    .topbar{ background: linear-gradient(180deg, var(--cui-primary-2), var(--cui-primary)); color:#fff; padding:14px 14px 10px; border-bottom:1px solid rgba(255,255,255,.18); flex-shrink:0; }
+    .topbar .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .brand{ display:flex; flex-direction:column; gap:2px; }
+    .brand .h{ font-weight:700; font-size:15px; letter-spacing:.2px; }
+    .brand .s{ opacity:.85; font-size:11px; }
+
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.30); background: rgba(255,255,255,.10); white-space:nowrap; }
+    .mini-btn{ border:1px solid rgba(255,255,255,.30); background: rgba(255,255,255,.12); color:#fff; border-radius:10px; padding:8px 10px; font-size:12px; cursor:pointer; transition:all .2s; }
+    .mini-btn:hover{ background: rgba(255,255,255,.18); }
+
+    .content{ padding:12px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex:1; max-height:calc(100% - 200px); }
+    .card{ border:1px solid var(--cui-line); border-radius:var(--radius); padding:12px; background:#fff; }
+
+    .summary{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .summary .h{ font-weight:800; }
+    .summary .pill2{ border:1px solid var(--cui-line); background:#f8fafc; color:var(--cui-muted); border-radius:999px; padding:6px 10px; font-size:12px; white-space:nowrap; }
+
+    .meta{ display:grid; grid-template-columns: 1fr; gap:6px; font-size:13px; }
+    .kv{ display:flex; gap:10px; align-items:baseline; }
+    .k{ width:80px; color:var(--cui-muted); font-weight:600; }
+    .v{ font-weight:700; }
+
+    input[type="date"], input[type="time"], select{ border:1px solid var(--cui-line); border-radius:10px; padding:6px 8px; font-size:13px; outline:none; }
+    input[type="date"]:focus, input[type="time"]:focus, select:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+
+    .checkrow{ display:flex; align-items:flex-start; gap:10px; font-size:13px; margin-bottom:10px; }
+    .checkrow input{ width:18px; height:18px; margin-top:2px; }
+
+    textarea{ width:100%; border:1px solid var(--cui-line); border-radius:10px; padding:10px; font-family: inherit; font-size:13px; min-height:76px; outline:none; }
+    textarea:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+    .count{ font-size:12px; color:var(--cui-muted); margin-top:6px; }
+
+    .search{ width:100%; border:1px solid var(--cui-line); border-radius:10px; padding:10px; font-size:13px; outline:none; }
+    .search:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .btn{ border:1px solid var(--cui-line); background:#f8fafc; color:var(--cui-text); border-radius:10px; padding:9px 10px; font-size:13px; cursor:pointer; transition:all .2s; }
+    .btn:hover{ background:#eef2f7; }
+    .btn.primary{ border-color: rgba(54,55,99,.25); background: rgba(54,55,99,.10); color:var(--cui-primary); }
+    .btn.danger{ border-color: rgba(189,56,80,.25); background: rgba(189,56,80,.08); color:var(--cui-danger); }
+    .btn.success{ border-color: rgba(34,194,95,.25); background: rgba(34,194,95,.08); color:var(--cui-success); }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .list{ margin-top:10px; border-top:1px solid var(--cui-line); }
+    .stu{ display:grid; grid-template-columns: 34px 1fr 90px; gap:10px; padding:10px 4px; border-bottom:1px solid var(--cui-line); align-items:center; }
+    .sr{ text-align:center; color:var(--cui-muted); font-size:12px; }
+    .who{ min-width:0; }
+    .reg{ color:var(--cui-muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .name{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .pa{ display:flex; gap:8px; justify-content:flex-end; }
+    .radio{ width:38px; height:32px; border-radius:10px; border:1px solid var(--cui-line); display:flex; align-items:center; justify-content:center; font-weight:800; cursor:pointer; user-select:none; background:#fff; transition:all .2s; }
+    .radio:hover{ border-color: var(--cui-primary); }
+    .radio.onP{ border-color: rgba(34,194,107,.40); background: rgba(34,194,107,.15); color: var(--cui-success); }
+    .radio.onA{ border-color: rgba(189,56,80,.40); background: rgba(189,56,80,.15); color:var(--cui-danger); }
+
+    .section-tabs{ display:flex; gap:8px; margin-bottom:12px; }
+    .section-tab{ flex:1; padding:10px 12px; border:1px solid var(--cui-line); background:#fff; border-radius:10px; cursor:pointer; font-weight:700; font-size:14px; transition:all .2s; text-align:center; }
+    .section-tab.active{ background:var(--cui-primary); color:#fff; border-color:var(--cui-primary); }
+
+    .footer{ border-top:1px solid var(--cui-line); padding:12px; background:#fff; flex-shrink:0; overflow-y:auto; max-height:150px; }
+    .submitIconBtn{ display:flex; align-items:center; gap:10px; width:100%; justify-content:center; border:1px solid rgba(54,55,99,.25); border-radius:12px; padding:10px 12px; cursor:pointer; background: linear-gradient(180deg, var(--cui-primary-2), var(--cui-primary)); color:#fff; font-weight:800; letter-spacing:.2px; transition:all .2s; }
+    .submitIconBtn:hover{ filter: brightness(1.05); }
+    .submitIconBtn:active{ transform: translateY(1px); }
+    .submitIconBtn[disabled]{ opacity:.55; cursor:not-allowed; filter: grayscale(.3); }
+
+    .status{ margin-top:10px; font-size:13px; color:var(--cui-muted); line-height:1.3; }
+
+    .badge{ display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .badge.online{ background:rgba(34,194,107,.15); color:var(--cui-success); border:1px solid rgba(34,194,107,.3); }
+
+    @media (max-width: 360px){
+      .stu{ grid-template-columns: 30px 1fr 86px; }
+      .radio{ width:36px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="phone" role="application" aria-label="Personal Attendance System">
+      <div class="topbar">
+        <div class="row">
+          <div class="brand">
+            <div class="h">📱 My Attendance</div>
+            <div class="s">Muhammad Jawad Rafeeq</div>
+          </div>
+          <div class="pill badge online">🟢 Online</div>
+        </div>
+      </div>
+
+      <div class="content" id="mainContent">
+        <!-- SECTION SELECTOR -->
+        <div class="section-tabs">
+          <button class="section-tab active" data-section="A">Section A</button>
+          <button class="section-tab" data-section="B">Section B</button>
+        </div>
+
+        <!-- SECTION A -->
+        <div id="sectionA" class="section-content">
+          <div class="card">
+            <div class="summary">
+              <div class="h">CSC462 – Artificial Intelligence</div>
+              <div class="pill2">Section A</div>
+            </div>
+            <div class="meta" style="margin-top:10px;">
+              <div class="kv"><div class="k">Date</div><div class="v"><input type="date" value="2026-02-06" /></div></div>
+              <div class="kv"><div class="k">Time</div><div class="v"><input type="time" value="09:00" /> – <input type="time" value="10:20" /></div></div>
+              <div class="kv"><div class="k">Type</div><div class="v"><select><option>Class</option><option>Lab</option><option>Exam</option></select></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="checkrow">
+              <input type="checkbox" id="isOnlineA" />
+              <label for="isOnlineA"><b>Online Class</b></label>
+            </div>
+            <div style="color: var(--cui-danger); font-weight: 700; margin-bottom: 6px;">Lecture Notes / Content</div>
+            <textarea placeholder="Type lecture notes for Section A" maxlength="2999"></textarea>
+            <div class="count"><span>0</span>/2999</div>
+          </div>
+
+          <div class="card">
+            <div class="summary">
+              <div class="h">Students (Section A)</div>
+              <div class="pill2">Present: 15 • Absent: 2</div>
+            </div>
+            <input class="search" type="search" placeholder="Search by name or reg no" />
+            <div class="controls">
+              <button class="btn primary">Mark All Present</button>
+              <button class="btn danger">Mark All Absent</button>
+              <button class="btn">Reset</button>
+            </div>
+            <div class="list">
+              <div class="stu"><div class="sr">1</div><div class="who"><div class="reg">FA22-BCS-008</div><div class="name">AQSA HANIF</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">2</div><div class="who"><div class="reg">FA22-BCS-078</div><div class="name">MUHAMMAD SALMAN</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">3</div><div class="who"><div class="reg">SP23-BCS-006</div><div class="name">ABEERA EJAZ</div></div><div class="pa"><div class="radio">P</div><div class="radio onA">A</div></div></div>
+              <div class="stu"><div class="sr">4</div><div class="who"><div class="reg">SP23-BCS-022</div><div class="name">HAMZA AZEEM</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">5</div><div class="who"><div class="reg">SP23-BCS-029</div><div class="name">MEHREEN YOUNAS</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">6</div><div class="who"><div class="reg">SP23-BCS-031</div><div class="name">MOAZ SAEED</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">7</div><div class="who"><div class="reg">SP23-BCS-045</div><div class="name">FATIMA KHAN</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION B -->
+        <div id="sectionB" class="section-content" style="display:none;">
+          <div class="card">
+            <div class="summary">
+              <div class="h">CSC462 – Artificial Intelligence</div>
+              <div class="pill2">Section B</div>
+            </div>
+            <div class="meta" style="margin-top:10px;">
+              <div class="kv"><div class="k">Date</div><div class="v"><input type="date" value="2026-02-06" /></div></div>
+              <div class="kv"><div class="k">Time</div><div class="v"><input type="time" value="10:30" /> – <input type="time" value="11:50" /></div></div>
+              <div class="kv"><div class="k">Type</div><div class="v"><select><option>Class</option><option>Lab</option><option>Exam</option></select></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="checkrow">
+              <input type="checkbox" id="isOnlineB" />
+              <label for="isOnlineB"><b>Online Class</b></label>
+            </div>
+            <div style="color: var(--cui-danger); font-weight: 700; margin-bottom: 6px;">Lecture Notes / Content</div>
+            <textarea placeholder="Type lecture notes for Section B" maxlength="2999"></textarea>
+            <div class="count"><span>0</span>/2999</div>
+          </div>
+
+          <div class="card">
+            <div class="summary">
+              <div class="h">Students (Section B)</div>
+              <div class="pill2">Present: 18 • Absent: 1</div>
+            </div>
+            <input class="search" type="search" placeholder="Search by name or reg no" />
+            <div class="controls">
+              <button class="btn primary">Mark All Present</button>
+              <button class="btn danger">Mark All Absent</button>
+              <button class="btn">Reset</button>
+            </div>
+            <div class="list">
+              <div class="stu"><div class="sr">1</div><div class="who"><div class="reg">FA22-BCS-010</div><div class="name">ALI RAZA</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">2</div><div class="who"><div class="reg">FA22-BCS-089</div><div class="name">SARA MALIK</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">3</div><div class="who"><div class="reg">SP23-BCS-012</div><div class="name">USMAN KHAN</div></div><div class="pa"><div class="radio">P</div><div class="radio onA">A</div></div></div>
+              <div class="stu"><div class="sr">4</div><div class="who"><div class="reg">SP23-BCS-033</div><div class="name">ZARA AHMED</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">5</div><div class="who"><div class="reg">SP23-BCS-041</div><div class="name">HASSAN WASEEM</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">6</div><div class="who"><div class="reg">SP23-BCS-052</div><div class="name">AMINA HUSSAIN</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+              <div class="stu"><div class="sr">7</div><div class="who"><div class="reg">SP23-BCS-068</div><div class="name">BILAL FAROOQ</div></div><div class="pa"><div class="radio onP">P</div><div class="radio">A</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="controls" style="margin-bottom:10px; font-size:12px;">
+          <button class="btn">📊 View History</button>
+          <button class="btn">⚙️ Settings</button>
+        </div>
+        <button class="submitIconBtn">
+          <span>✓</span>
+          <div>Submit & Lock</div>
+        </button>
+        <div class="status">Ready to mark attendance. Click students to toggle Present/Absent.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sectionTabs = document.querySelectorAll('.section-tab');
+    const sectionContents = document.querySelectorAll('.section-content');
+
+    sectionTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const section = tab.dataset.section;
+        
+        sectionTabs.forEach(t => t.classList.remove('active'));
+        sectionContents.forEach(c => c.style.display = 'none');
+        
+        tab.classList.add('active');
+        document.getElementById(`section${section}`).style.display = 'block';
+      });
+    });
+
+    // Textarea character counter
+    document.querySelectorAll('textarea').forEach(textarea => {
+      textarea.addEventListener('input', (e) => {
+        const counter = e.target.nextElementSibling.querySelector('span');
+        counter.textContent = e.target.value.length;
+      });
+    });
+  </script>
+</body>
+</html>
