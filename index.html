@@ -124,6 +124,25 @@
     .qr-container{ text-align:center; margin:10px 0; }
     .qr-container canvas, .qr-container img{ max-width:100%; border:1px solid var(--cui-line); border-radius:10px; }
 
+    .admin-grid{ display:grid; gap:10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .admin-card{ border:1px solid var(--cui-line); border-radius:12px; padding:10px; background:#fff; display:flex; flex-direction:column; gap:6px; min-height:96px; }
+    .admin-card .title{ font-size:12px; color:var(--cui-muted); font-weight:700; letter-spacing:.2px; }
+    .admin-card .value{ font-size:18px; font-weight:800; }
+    .admin-card .trend{ font-size:12px; color:var(--cui-muted); }
+    .admin-badge{ display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; border:1px solid rgba(54,55,99,.15); background:#f8fafc; }
+    .admin-table{ width:100%; border-collapse:collapse; font-size:12px; }
+    .admin-table th, .admin-table td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--cui-line); }
+    .admin-table th{ color:var(--cui-muted); font-weight:700; }
+    .admin-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+    .admin-chip{ border-radius:999px; padding:4px 8px; font-size:11px; font-weight:700; border:1px solid rgba(34,194,107,.35); background:rgba(34,194,107,.12); color:var(--cui-success); }
+    .admin-chip.warn{ border-color: rgba(189,56,80,.35); background:rgba(189,56,80,.12); color:var(--cui-danger); }
+    .progress{ height:8px; border-radius:999px; background:#eef2f7; overflow:hidden; }
+    .progress span{ display:block; height:100%; background:linear-gradient(90deg, rgba(34,194,107,.5), rgba(34,194,107,1)); }
+    .admin-list{ display:flex; flex-direction:column; gap:8px; }
+    .admin-item{ display:flex; justify-content:space-between; gap:10px; padding:8px; border:1px solid var(--cui-line); border-radius:10px; background:#fff; }
+    .admin-item strong{ font-size:12px; }
+    .admin-item small{ color:var(--cui-muted); font-size:11px; }
+
     @media (max-width: 360px){
       .stu{ grid-template-columns: 30px 1fr 86px; }
       .radio{ width:36px; }
@@ -151,6 +170,12 @@
       </div>
 
       <div class="content" id="mainContent">
+        <div class="tab-buttons">
+          <button class="tab-btn active" id="crTab">CR View</button>
+          <button class="tab-btn" id="adminTab">Admin Panel</button>
+        </div>
+
+        <div id="crView">
         <!-- ATTENDANCE FORM SECTION -->
         <div class="card">
           <div class="summary">
@@ -196,6 +221,144 @@
         <div class="card" id="analyticsCard" style="display:none;">
           <div class="h" style="margin-bottom:10px;">📊 Analytics</div>
           <canvas id="attendanceChart" style="max-height:200px;"></canvas>
+        </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="adminView" style="display:none;">
+          <div class="card">
+            <div class="summary">
+              <div class="h">Admin Dashboard</div>
+              <div class="pill2">Semester: Spring 2026</div>
+            </div>
+            <div class="admin-grid" style="margin-top:10px;">
+              <div class="admin-card">
+                <div class="title">Active Classes</div>
+                <div class="value">18</div>
+                <div class="trend">+2 this week</div>
+              </div>
+              <div class="admin-card">
+                <div class="title">Pending Approvals</div>
+                <div class="value">5</div>
+                <div class="trend">3 require review</div>
+              </div>
+              <div class="admin-card">
+                <div class="title">Faculty Online</div>
+                <div class="value">12/15</div>
+                <div class="trend">Live sessions</div>
+              </div>
+              <div class="admin-card">
+                <div class="title">Sync Health</div>
+                <div class="value">98%</div>
+                <div class="trend">Last sync 4 min ago</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="summary">
+              <div class="h">Approval Queue</div>
+              <div class="pill2">Today</div>
+            </div>
+            <table class="admin-table" style="margin-top:8px;">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Section</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CSC462</td>
+                  <td>A</td>
+                  <td><span class="admin-chip">Ready</span></td>
+                  <td class="admin-actions">
+                    <button class="btn success">Approve</button>
+                    <button class="btn danger">Reject</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>SE102</td>
+                  <td>B</td>
+                  <td><span class="admin-chip warn">Missing Notes</span></td>
+                  <td class="admin-actions">
+                    <button class="btn">Request Edit</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>AI Lab</td>
+                  <td>A</td>
+                  <td><span class="admin-chip">Ready</span></td>
+                  <td class="admin-actions">
+                    <button class="btn success">Approve</button>
+                    <button class="btn danger">Reject</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <div class="summary">
+              <div class="h">Department Coverage</div>
+              <div class="pill2">Target 95%</div>
+            </div>
+            <div class="admin-list" style="margin-top:10px;">
+              <div>
+                <div class="kv" style="justify-content:space-between;">
+                  <div class="k">Morning Sessions</div>
+                  <div class="v">92%</div>
+                </div>
+                <div class="progress"><span style="width:92%;"></span></div>
+              </div>
+              <div>
+                <div class="kv" style="justify-content:space-between;">
+                  <div class="k">Afternoon Sessions</div>
+                  <div class="v">97%</div>
+                </div>
+                <div class="progress"><span style="width:97%;"></span></div>
+              </div>
+              <div>
+                <div class="kv" style="justify-content:space-between;">
+                  <div class="k">Evening Sessions</div>
+                  <div class="v">88%</div>
+                </div>
+                <div class="progress"><span style="width:88%;"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="summary">
+              <div class="h">Recent Admin Actions</div>
+              <div class="pill2">Audit Trail</div>
+            </div>
+            <div class="admin-list" style="margin-top:10px;">
+              <div class="admin-item">
+                <div>
+                  <strong>Approved CSC462-A</strong><br>
+                  <small>By Dr. Ali • 9:42 AM</small>
+                </div>
+                <span class="badge approved">Approved</span>
+              </div>
+              <div class="admin-item">
+                <div>
+                  <strong>Requested edits for SE102-B</strong><br>
+                  <small>By Admin Desk • 9:12 AM</small>
+                </div>
+                <span class="badge locked">Needs Edit</span>
+              </div>
+              <div class="admin-item">
+                <div>
+                  <strong>Sync issue resolved</strong><br>
+                  <small>System • 8:55 AM</small>
+                </div>
+                <span class="badge online">Resolved</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -365,6 +528,10 @@
     const statusBadge = document.getElementById('statusBadge');
     const analyticsBtn = document.getElementById('analyticsBtn');
     const analyticsCard = document.getElementById('analyticsCard');
+    const crTab = document.getElementById('crTab');
+    const adminTab = document.getElementById('adminTab');
+    const crView = document.getElementById('crView');
+    const adminView = document.getElementById('adminView');
 
     // Modals
     const submitBackdrop = document.getElementById('submitBackdrop');
@@ -676,6 +843,21 @@
           }
         });
       }
+    });
+
+    crTab.addEventListener('click', () => {
+      crTab.classList.add('active');
+      adminTab.classList.remove('active');
+      crView.style.display = 'block';
+      adminView.style.display = 'none';
+    });
+
+    adminTab.addEventListener('click', () => {
+      adminTab.classList.add('active');
+      crTab.classList.remove('active');
+      adminView.style.display = 'block';
+      crView.style.display = 'none';
+      analyticsCard.style.display = 'none';
     });
 
     // Network events
