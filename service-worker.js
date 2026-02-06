@@ -42,6 +42,11 @@ self.addEventListener('activate', event => {
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', event => {
+  // Skip non-http(s) requests (chrome-extension, etc.)
+  if (!event.request.url.startsWith('http')) {
+    return;
+  }
+  
   if (event.request.method !== 'GET') return;
 
   event.respondWith(
@@ -69,3 +74,6 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+});
+
