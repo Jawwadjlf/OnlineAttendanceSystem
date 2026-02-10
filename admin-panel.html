@@ -470,7 +470,7 @@
       if (tabName === 'crs') loadCRs();
     }
 
-    // Generate bookmarklet with section prompt
+    // Generate bookmarklet - NOW USES UNIFIED ENDPOINT
     function generateBookmarklet() {
       const code = `(() => {
   const src = window.lstAttendanceRegister?.LstAttendanceStudents;
@@ -499,7 +499,7 @@
   };
  
   const SECRET = encodeURIComponent("k9F@3xQp7L_92aZ!rT");
-  const ENDPOINT = "https://script.google.com/macros/s/AKfycbwYc1nyNY5pyiSrDO3jpySSaTHKIfSZnZlp0c0dCernaKNGchBY9PbnttxoQ7rUn7GE/exec";
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbwZigSx9Zr2y0qa10jcR5y8U3B5aOApVgwaAbo-fssmvB7Y7cf90LkNjvjjwhDtFA8G/exec";
  
   console.log("📤 Sending to Drive...");
   console.log("Section:", section);
