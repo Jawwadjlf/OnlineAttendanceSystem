@@ -281,16 +281,6 @@
           <h3>📥 CUOnline Roster Scraper</h3>
           <p>Generate a bookmarklet to extract roster data directly from CUOnline attendance page and save to Drive.</p>
           
-          <div class="form-group">
-            <label>Apps Script Endpoint URL</label>
-            <input type="text" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbwTkGO8pnejb3Rj3vmx9ilQy1vyjfgkPW7_UoTrJx9zxBQJYVailKppcRfJOXBHFCl-/exec" />
-          </div>
-
-          <div class="form-group">
-            <label>Secret Key</label>
-            <input type="password" id="secretKey" value="k9F@3xQp7L_92aZ!rT" />
-          </div>
-
           <button class="btn" onclick="generateBookmarklet()">🛠️ Generate Bookmarklet Code</button>
 
           <div id="bookmarkletOutput" style="display:none;">
@@ -464,11 +454,8 @@
       document.getElementById(tabName).style.display = 'block';
     }
 
-    // Generate bookmarklet
+    // Generate bookmarklet with exact code from user
     function generateBookmarklet() {
-      const scriptUrl = document.getElementById('scriptUrl').value;
-      const secret = document.getElementById('secretKey').value;
-
       const code = `(() => {
   const src = window.lstAttendanceRegister?.LstAttendanceStudents;
   if (!Array.isArray(src) || src.length === 0) {
@@ -484,17 +471,15 @@
  
   const payload = {
     type: "roster",
-    courseId: window.courseId || "UNKNOWN",
-    courseName: window.courseName || "UNKNOWN",
-    section: window.section || "NA",
+    courseId: window.courseId,
     facultyId: window.FacultyId,
     extractedAt: new Date().toISOString(),
     totalStudents: roster.length,
     roster
   };
  
-  const SECRET = encodeURIComponent("${secret}");
-  const ENDPOINT = "${scriptUrl}";
+  const SECRET = encodeURIComponent("k9F@3xQp7L_92aZ!rT");
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbwYc1nyNY5pyiSrDO3jpySSaTHKIfSZnZlp0c0dCernaKNGchBY9PbnttxoQ7rUn7GE/exec";
  
   console.log("📤 Sending to Drive...");
  
@@ -554,11 +539,19 @@
             </thead>
             <tbody>
               <tr>
-                <td>roster_course_30000_section_NA_2026-02-07.json</td>
+                <td>roster_course_30000_section_NA_2026-02-09.json</td>
                 <td>30000</td>
                 <td><span class="badge blue">NA</span></td>
                 <td>13</td>
-                <td>2026-02-07</td>
+                <td>2026-02-09</td>
+                <td><button class="btn secondary" style="padding: 6px 12px; font-size: 12px;">View</button></td>
+              </tr>
+              <tr>
+                <td>roster_course_30001_section_NA_2026-02-09.json</td>
+                <td>30001</td>
+                <td><span class="badge blue">NA</span></td>
+                <td>13</td>
+                <td>2026-02-09</td>
                 <td><button class="btn secondary" style="padding: 6px 12px; font-size: 12px;">View</button></td>
               </tr>
             </tbody>
@@ -609,9 +602,9 @@
     // Load stats on page load
     window.addEventListener('DOMContentLoaded', () => {
       // TODO: Load actual stats from API
-      document.getElementById('totalRosters').textContent = '1';
-      document.getElementById('totalStudents').textContent = '13';
-      document.getElementById('totalSections').textContent = '1';
+      document.getElementById('totalRosters').textContent = '2';
+      document.getElementById('totalStudents').textContent = '26';
+      document.getElementById('totalSections').textContent = '2';
     });
   </script>
 </body>
