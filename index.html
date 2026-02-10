@@ -56,8 +56,8 @@
     .k{ width:70px; color:var(--cui-muted); }
     .v{ font-weight:700; }
 
-    input[type="date"], input[type="time"], select{ border:1px solid var(--cui-line); border-radius:10px; padding:6px 8px; font-size:13px; outline:none; }
-    input[type="date"]:focus, input[type="time"]:focus, select:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
+    input[type="date"], input[type="time"], input[type="email"], select{ border:1px solid var(--cui-line); border-radius:10px; padding:6px 8px; font-size:13px; outline:none; width: 100%; }
+    input[type="date"]:focus, input[type="time"]:focus, input[type="email"]:focus, select:focus{ border-color: var(--cui-primary); box-shadow: 0 0 0 3px rgba(54,55,99,.12); }
 
     .checkrow{ display:flex; align-items:flex-start; gap:10px; font-size:13px; margin-bottom:10px; }
     .checkrow input{ width:18px; height:18px; margin-top:2px; }
@@ -141,7 +141,7 @@
         <div class="row">
           <div class="brand">
             <div class="h" id="brandTitle">📱 CUOnline Attendance</div>
-            <div class="s">With Google Apps Script Backend</div>
+            <div class="s" id="crInfo">Loading...</div>
           </div>
           <div style="display:flex;gap:10px;align-items:center;">
             <div id="netPill" class="pill badge online">🟢 Online</div>
@@ -216,6 +216,22 @@
     </div>
   </div>
 
+  <!-- CR LOGIN MODAL -->
+  <div class="backdrop" id="loginBackdrop" style="display:flex;">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>👤 CR Login</h3>
+      <p>Enter your COMSATS email to access your section's attendance</p>
+      <div style="margin-bottom:12px;">
+        <label style="display:block; margin-bottom:6px; font-weight:700; font-size:13px;">CR Email</label>
+        <input type="email" id="loginEmail" placeholder="cr@comsats.edu.pk" style="width:100%; border:1px solid var(--cui-line); border-radius:10px; padding:10px; font-size:13px;" />
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="loginBtn" style="width:100%;">✓ Login</button>
+      </div>
+      <div id="loginStatus" style="margin-top:10px; font-size:13px; color:var(--cui-muted);"></div>
+    </div>
+  </div>
+
   <!-- SUBMIT CONFIRMATION MODAL -->
   <div class="backdrop" id="submitBackdrop">
     <div class="modal" role="dialog" aria-modal="true">
@@ -261,9 +277,8 @@
     // GOOGLE APPS SCRIPT CONFIG
     // =====================
     const APPSCRIPT_URL = "https://script.google.com/macros/s/AKfycbymA03UPvai3U3aV1yvTr1vj4wXnysUhRygI9bLza-YkX1YtaH69EDykJngb9Ny8IClCA/exec";
-    const ROSTER_URL    = "https://script.google.com/macros/s/AKfycbwTkGO8pnejb3Rj3vmx9ilQy1vyjfgkPW7_UoTrJx9zxBQJYVailKppcRfJOXBHFCl-/exec";
+    const ROSTER_URL    = "https://script.google.com/macros/s/AKfycbwZigSx9Zr2y0qa10jcR5y8U3B5aOApVgwaAbo-fssmvB7Y7cf90LkNjvjjwhDtFA8G/exec";
     const ROSTER_SECRET = "k9F@3xQp7L_92aZ!rT";
-    const COURSE_ID     = "30000";
 
     // =====================
     // INDEXEDDB HELPER
@@ -355,11 +370,11 @@
     const db = new AttendanceDB();
     let isOnline = navigator.onLine;
     let locked = false;
-    let currentUser = { email: 'cr@comsats.edu.pk', role: 'CR', uid: 'user123' };
+    let currentUser = { email: '', role: 'CR', courseId: '', section: '' };
 
     const marks = new Map();
     let students = [];
-    let rosterMeta = {}; // Store section, courseName from roster JSON
+    let rosterMeta = {};
 
     // =====================
     // DOM REFS
@@ -382,6 +397,11 @@
     const analyticsCard = document.getElementById('analyticsCard');
     const syncRosterBtn = document.getElementById('syncRosterBtn');
 
+    const loginBackdrop = document.getElementById('loginBackdrop');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginStatus = document.getElementById('loginStatus');
+
     const submitBackdrop = document.getElementById('submitBackdrop');
     const confirmSubmit = document.getElementById('confirmSubmit');
     const cancelSubmit = document.getElementById('cancelSubmit');
@@ -391,6 +411,57 @@
     const emailStatus = document.getElementById('emailStatus');
     const sendEmail = document.getElementById('sendEmail');
     const cancelEmail = document.getElementById('cancelEmail');
+
+    // =====================
+    // CR AUTHENTICATION
+    // =====================
+    async function authenticateCR(email) {
+      const params = new URLSearchParams({
+        action: 'getCRAssignment',
+        secret: ROSTER_SECRET,
+        email: email
+      });
+
+      const res = await fetch(`${ROSTER_URL}?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      
+      const data = await res.json();
+      if (data.ok === false) throw new Error(data.error || 'Authentication failed');
+      
+      return data.assignment;
+    }
+
+    function saveCRToStorage(assignment) {
+      currentUser.email = assignment.email;
+      currentUser.courseId = assignment.courseId;
+      currentUser.section = assignment.section;
+      localStorage.setItem('cr_email', assignment.email);
+      localStorage.setItem('cr_assignment', JSON.stringify(assignment));
+    }
+
+    function loadCRFromStorage() {
+      const email = localStorage.getItem('cr_email');
+      const assignmentStr = localStorage.getItem('cr_assignment');
+      
+      if (email && assignmentStr) {
+        try {
+          const assignment = JSON.parse(assignmentStr);
+          currentUser.email = assignment.email;
+          currentUser.courseId = assignment.courseId;
+          currentUser.section = assignment.section;
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+      return false;
+    }
+
+    function logoutCR() {
+      localStorage.removeItem('cr_email');
+      localStorage.removeItem('cr_assignment');
+      location.reload();
+    }
 
     // =====================
     // HELPER: Set today's date
@@ -506,8 +577,8 @@
     function buildAttendanceJson() {
       return {
         course: rosterMeta.courseName || document.getElementById('course').textContent,
-        courseValue: rosterMeta.courseId || 30000,
-        section: rosterMeta.section || 'NA',
+        courseValue: rosterMeta.courseId || currentUser.courseId,
+        section: rosterMeta.section || currentUser.section,
         date: document.getElementById('dateInput').value,
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
@@ -535,8 +606,7 @@
 
       const params = new URLSearchParams({
         secret: ROSTER_SECRET,
-        courseId: COURSE_ID,
-        section: 'NA'
+        crEmail: currentUser.email
       });
 
       const res = await fetch(`${ROSTER_URL}?${params.toString()}`);
@@ -553,18 +623,16 @@
     function applyRoster(payload) {
       const roster = payload.roster || [];
 
-      // Extract metadata
       rosterMeta = {
-        courseId: payload.courseId || 30000,
-        courseName: payload.courseName || `Course ${payload.courseId || 30000}`,
-        section: payload.section || 'NA'
+        courseId: payload.courseId || currentUser.courseId,
+        courseName: payload.courseName || `Course ${payload.courseId || currentUser.courseId}`,
+        section: payload.section || currentUser.section
       };
 
-      // Update UI
       document.getElementById('course').textContent = rosterMeta.courseName;
       document.getElementById('sectionDisplay').textContent = rosterMeta.section;
+      document.getElementById('crInfo').textContent = `${currentUser.email} • Section ${rosterMeta.section}`;
 
-      // Map roster to students
       students = roster.map((item) => ({
         regNo: item.regNo,
         displayReg: item.regNo,
@@ -598,7 +666,7 @@
       } catch (e) {
         console.error('Roster init failed:', e);
         if (!students.length) {
-          status.textContent = '❌ Failed to load roster. Check network / roster Apps Script.';
+          status.textContent = '❌ Failed to load roster: ' + e.message;
         }
       }
     }
@@ -620,6 +688,44 @@
         status.textContent = '❌ Roster sync failed: ' + e.message;
       }
     }
+
+    // =====================
+    // LOGIN EVENTS
+    // =====================
+    loginBtn.addEventListener('click', async () => {
+      const email = loginEmail.value.trim();
+      if (!email) {
+        loginStatus.textContent = '⚠️ Please enter your email';
+        loginStatus.style.color = 'var(--cui-danger)';
+        return;
+      }
+
+      loginStatus.textContent = '⏳ Authenticating...';
+      loginStatus.style.color = 'var(--cui-muted)';
+      loginBtn.disabled = true;
+
+      try {
+        const assignment = await authenticateCR(email);
+        saveCRToStorage(assignment);
+        
+        loginStatus.textContent = '✅ Login successful!';
+        loginStatus.style.color = 'var(--cui-success)';
+        
+        loginBackdrop.style.display = 'none';
+        
+        await initRoster();
+        await restoreDraftLocal();
+        render();
+      } catch (e) {
+        loginStatus.textContent = '❌ ' + e.message;
+        loginStatus.style.color = 'var(--cui-danger)';
+        loginBtn.disabled = false;
+      }
+    });
+
+    loginEmail.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loginBtn.click();
+    });
 
     // =====================
     // EVENTS
@@ -755,8 +861,10 @@
     });
 
     userBtn.addEventListener('click', () => {
-      const userInfo = `${currentUser.email} (${currentUser.role})`;
-      alert(`Profile: ${userInfo}\nStatus: ${isOnline ? '🟢 Online' : '🟡 Offline'}`);
+      const msg = `Profile: ${currentUser.email}\nCourse: ${rosterMeta.courseId}\nSection: ${rosterMeta.section}\nStatus: ${isOnline ? '🟢 Online' : '🟡 Offline'}\n\nClick OK to logout`;
+      if (confirm(msg)) {
+        logoutCR();
+      }
     });
 
     analyticsBtn.addEventListener('click', () => {
@@ -817,12 +925,20 @@
       try {
         setTodayDate();
         await db.init();
-        await initRoster();
-        await restoreDraftLocal();
-        render();
         setNet();
         
-        console.log('✅ App initialized. Roster syncing from Drive.');
+        // Check if CR is already logged in
+        if (loadCRFromStorage()) {
+          loginBackdrop.style.display = 'none';
+          await initRoster();
+          await restoreDraftLocal();
+          render();
+          console.log('✅ App initialized. CR:', currentUser.email);
+        } else {
+          // Show login modal
+          loginBackdrop.style.display = 'flex';
+          console.log('🔒 CR login required');
+        }
       } catch (e) {
         console.error('Init failed:', e);
       }
