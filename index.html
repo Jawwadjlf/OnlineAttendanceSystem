@@ -599,14 +599,23 @@
     // =====================
     // ROSTER
     // =====================
+
+    /**
+     * Fetches the latest roster from the server for this CR's courseId + section.
+     * Sends action=getLatestRoster so the Apps Script can find the newest
+     * Drive file matching: roster_course_{courseId}_section_{section}_{YYYY-MM-DD}
+     */
     async function fetchRosterFromServer() {
       if (!ROSTER_URL) {
         throw new Error('ROSTER_URL not configured');
       }
 
       const params = new URLSearchParams({
+        action: 'getLatestRoster',
         secret: ROSTER_SECRET,
-        crEmail: currentUser.email
+        crEmail: currentUser.email,
+        courseId: currentUser.courseId,
+        section: currentUser.section
       });
 
       const res = await fetch(`${ROSTER_URL}?${params.toString()}`);
@@ -626,7 +635,9 @@
       rosterMeta = {
         courseId: payload.courseId || currentUser.courseId,
         courseName: payload.courseName || `Course ${payload.courseId || currentUser.courseId}`,
-        section: payload.section || currentUser.section
+        section: payload.section || currentUser.section,
+        fileName: payload.fileName || null,
+        fileDate: payload.fileDate || null
       };
 
       document.getElementById('course').textContent = rosterMeta.courseName;
@@ -643,7 +654,8 @@
       students.forEach(s => marks.set(s.regNo, 'P'));
 
       render();
-      status.textContent = `📁 Roster loaded (${students.length} students).`;
+      const fileInfo = rosterMeta.fileDate ? ` • ${rosterMeta.fileDate}` : '';
+      status.textContent = `📁 Roster loaded (${students.length} students)${fileInfo}.`;
     }
 
     async function initRoster() {
@@ -651,15 +663,17 @@
         const saved = await db.getRoster();
         if (saved && saved.data) {
           applyRoster(saved.data);
-          status.textContent = `📁 Loaded roster from offline cache (${students.length} students).`;
+          const cachedFile = saved.data.fileDate ? ` [${saved.data.fileDate}]` : '';
+          status.textContent = `📁 Loaded roster from offline cache (${students.length} students)${cachedFile}.`;
         }
 
         if (isOnline) {
-          status.textContent = '⏳ Syncing roster from server...';
+          status.textContent = '⏳ Syncing latest roster from server...';
           const fresh = await fetchRosterFromServer();
           await db.saveRoster(fresh);
           applyRoster(fresh);
-          status.textContent = `✅ Roster synced from server (${students.length} students).`;
+          const fileInfo = fresh.fileDate ? ` [${fresh.fileDate}]` : '';
+          status.textContent = `✅ Roster synced from server (${students.length} students)${fileInfo}.`;
         } else if (!saved) {
           status.textContent = '🟡 Offline and no roster cached yet. Connect once to fetch roster.';
         }
@@ -677,12 +691,13 @@
         return;
       }
 
-      status.textContent = '⏳ Syncing roster...';
+      status.textContent = '⏳ Syncing latest roster...';
       try {
         const fresh = await fetchRosterFromServer();
         await db.saveRoster(fresh);
         applyRoster(fresh);
-        status.textContent = `✅ Roster updated. (${students.length} students loaded.)`;
+        const fileInfo = rosterMeta.fileDate ? ` • ${rosterMeta.fileDate}` : '';
+        status.textContent = `✅ Roster updated (${students.length} students)${fileInfo}.`;
       } catch (e) {
         console.error('Sync failed:', e);
         status.textContent = '❌ Roster sync failed: ' + e.message;
