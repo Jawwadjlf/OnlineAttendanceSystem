@@ -108,6 +108,8 @@ The system is built as a **Progressive Web App** enabling offline functionality,
 
 ### 2. Create Google Apps Script Backend
 
+> **Tip**: For a detailed guide on setting up and managing the backend script using `clasp` (command line), see [Google Apps Script Setup](docs/google-apps-script-setup.md).
+
 ```bash
 1. Go to script.google.com
 2. Create New Project: "CUOnline Admin Backend"
@@ -116,6 +118,7 @@ The system is built as a **Progressive Web App** enabling offline functionality,
 5. Deploy as Web App ("Execute as you")
 6. Copy the Deployment URL
 ```
+
 
 ### 3. Deploy Frontend
 

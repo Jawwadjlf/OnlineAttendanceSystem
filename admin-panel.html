@@ -1,44 +1,56 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel – Attendance System</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       padding: 20px;
     }
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
     }
+
     .header {
       background: white;
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
       margin-bottom: 24px;
     }
+
     .header h1 {
       font-size: 28px;
       color: #1a202c;
       margin-bottom: 8px;
     }
+
     .header p {
       color: #718096;
       font-size: 14px;
     }
+
     .tabs {
       display: flex;
       gap: 12px;
       margin-bottom: 24px;
       flex-wrap: wrap;
     }
+
     .tab {
       background: white;
       border: none;
@@ -49,29 +61,35 @@
       cursor: pointer;
       transition: all 0.2s;
       color: #4a5568;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
+
     .tab:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
     }
+
     .tab.active {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
+
     .content {
       background: white;
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
       min-height: 400px;
     }
+
     .tab-pane {
       display: none;
     }
+
     .tab-pane.active {
       display: block;
     }
+
     .card {
       background: #f7fafc;
       border: 1px solid #e2e8f0;
@@ -79,17 +97,20 @@
       padding: 20px;
       margin-bottom: 16px;
     }
+
     .card h3 {
       color: #2d3748;
       font-size: 18px;
       margin-bottom: 12px;
     }
+
     .card p {
       color: #718096;
       font-size: 14px;
       line-height: 1.6;
       margin-bottom: 16px;
     }
+
     .btn {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -104,21 +125,26 @@
       align-items: center;
       gap: 8px;
     }
+
     .btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
+
     .btn.secondary {
       background: #e2e8f0;
       color: #2d3748;
     }
+
     .btn.danger {
       background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
     }
+
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     .code-block {
       background: #1a202c;
       color: #68d391;
@@ -131,9 +157,11 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
+
     .form-group {
       margin-bottom: 20px;
     }
+
     .form-group label {
       display: block;
       font-weight: 700;
@@ -141,6 +169,7 @@
       margin-bottom: 8px;
       font-size: 14px;
     }
+
     .form-group input,
     .form-group select,
     .form-group textarea {
@@ -151,6 +180,7 @@
       font-size: 14px;
       font-family: inherit;
     }
+
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
@@ -158,32 +188,38 @@
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
+
     .alert {
       padding: 16px;
       border-radius: 10px;
       margin-bottom: 20px;
       font-size: 14px;
     }
+
     .alert.success {
       background: rgba(72, 187, 120, 0.1);
       color: #2f855a;
       border: 1px solid rgba(72, 187, 120, 0.3);
     }
+
     .alert.error {
       background: rgba(245, 101, 101, 0.1);
       color: #c53030;
       border: 1px solid rgba(245, 101, 101, 0.3);
     }
+
     .alert.info {
       background: rgba(66, 153, 225, 0.1);
       color: #2c5282;
       border: 1px solid rgba(66, 153, 225, 0.3);
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 16px;
     }
+
     table th,
     table td {
       text-align: left;
@@ -191,14 +227,17 @@
       border-bottom: 1px solid #e2e8f0;
       font-size: 14px;
     }
+
     table th {
       font-weight: 700;
       color: #2d3748;
       background: #f7fafc;
     }
+
     table td {
       color: #4a5568;
     }
+
     .badge {
       display: inline-block;
       padding: 4px 12px;
@@ -206,26 +245,32 @@
       font-size: 12px;
       font-weight: 700;
     }
+
     .badge.green {
       background: rgba(72, 187, 120, 0.15);
       color: #2f855a;
     }
+
     .badge.blue {
       background: rgba(66, 153, 225, 0.15);
       color: #2c5282;
     }
+
     .badge.purple {
       background: rgba(159, 122, 234, 0.15);
       color: #6b46c1;
     }
+
     .badge.red {
       background: rgba(245, 101, 101, 0.15);
       color: #c53030;
     }
+
     .copy-btn {
       position: relative;
       margin-top: 12px;
     }
+
     .instructions {
       background: #edf2f7;
       border-left: 4px solid #667eea;
@@ -233,22 +278,26 @@
       border-radius: 8px;
       margin-top: 16px;
     }
+
     .instructions ol {
       margin-left: 20px;
       margin-top: 12px;
     }
+
     .instructions li {
       margin-bottom: 8px;
       color: #4a5568;
       font-size: 14px;
       line-height: 1.6;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
       margin-top: 20px;
     }
+
     .stat-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -256,24 +305,29 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
+
     .stat-card h4 {
       font-size: 14px;
       opacity: 0.9;
       margin-bottom: 8px;
     }
+
     .stat-card .number {
       font-size: 36px;
       font-weight: 800;
     }
+
     .file-link {
       color: #667eea;
       text-decoration: none;
     }
+
     .file-link:hover {
       text-decoration: underline;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
@@ -295,7 +349,7 @@
         <div class="card">
           <h3>📥 CUOnline Roster Scraper</h3>
           <p>Generate a bookmarklet to extract roster data directly from CUOnline attendance page and save to Drive.</p>
-          
+
           <button class="btn" onclick="generateBookmarklet()">🛠️ Generate Bookmarklet Code</button>
 
           <div id="bookmarkletOutput" style="display:none;">
@@ -352,7 +406,7 @@
         <div class="card">
           <h3>👥 Assign CR to Section</h3>
           <p>Assign class representative emails to specific course sections</p>
-          
+
           <div class="form-group">
             <label>CR Email</label>
             <input type="email" id="crEmail" placeholder="cr1@comsats.edu.pk" />
@@ -389,7 +443,7 @@
         <div class="card">
           <h3>🔓 Unlock Attendance</h3>
           <p>Allow CRs to edit previously submitted attendance</p>
-          
+
           <div class="form-group">
             <label>Course ID</label>
             <input type="text" id="unlockCourseId" placeholder="30000" />
@@ -420,7 +474,7 @@
         <div class="card">
           <h3>➕ Add Student to Roster</h3>
           <p>Manually add a new student to an existing roster</p>
-          
+
           <div class="form-group">
             <label>Course ID</label>
             <input type="text" id="addCourseId" placeholder="30000" />
@@ -461,10 +515,10 @@
     function switchTab(tabName) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
-      
+
       event.target.classList.add('active');
       document.getElementById(tabName).style.display = 'block';
-      
+
       // Auto-load data when switching tabs
       if (tabName === 'rosters') loadRosters();
       if (tabName === 'crs') loadCRs();
@@ -545,12 +599,12 @@
       try {
         const response = await fetch(`${API_URL}?action=listRosters&secret=${SECRET}`);
         const data = await response.json();
-        
+
         if (data.ok) {
           const rosters = data.rosters || [];
           const uniqueSections = new Set(rosters.map(r => `${r.courseId}_${r.section}`)).size;
           const totalStudents = rosters.reduce((sum, r) => sum + (r.totalStudents || 0), 0);
-          
+
           document.getElementById('totalRosters').textContent = rosters.length;
           document.getElementById('totalStudents').textContent = totalStudents;
           document.getElementById('totalSections').textContent = uniqueSections;
@@ -567,14 +621,14 @@
     // Load rosters from API
     async function loadRosters() {
       document.getElementById('rostersList').innerHTML = '<div class="alert info">⏳ Loading rosters...</div>';
-      
+
       try {
         const response = await fetch(`${API_URL}?action=listRosters&secret=${SECRET}`);
         const data = await response.json();
-        
+
         if (data.ok && data.rosters && data.rosters.length > 0) {
           const rosters = data.rosters;
-          
+
           let html = `<table>
             <thead>
               <tr>
@@ -587,7 +641,7 @@
               </tr>
             </thead>
             <tbody>`;
-          
+
           rosters.forEach(r => {
             const date = new Date(r.lastModified).toLocaleDateString();
             html += `<tr>
@@ -599,7 +653,7 @@
               <td><a href="${r.fileUrl}" target="_blank" class="btn secondary" style="padding: 6px 12px; font-size: 12px;">View</a></td>
             </tr>`;
           });
-          
+
           html += `</tbody></table>`;
           document.getElementById('rostersList').innerHTML = html;
         } else {
@@ -622,12 +676,12 @@
       }
 
       document.getElementById('crStatus').innerHTML = '<div class="alert info">⏳ Assigning CR...</div>';
-      
+
       try {
         const url = `${API_URL}?action=assignCR&secret=${SECRET}&email=${encodeURIComponent(email)}&courseId=${courseId}&section=${section}`;
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (data.ok) {
           document.getElementById('crStatus').innerHTML = `<div class="alert success">✅ CR ${email} assigned to Course ${courseId}, Section ${section}</div>`;
           loadCRs();
@@ -642,11 +696,11 @@
     // Load CRs
     async function loadCRs() {
       document.getElementById('crList').innerHTML = '<div class="alert info">⏳ Loading CRs...</div>';
-      
+
       try {
         const response = await fetch(`${API_URL}?action=listCRs&secret=${SECRET}`);
         const data = await response.json();
-        
+
         if (data.ok && data.crs && data.crs.length > 0) {
           let html = `<table>
             <thead>
@@ -658,7 +712,7 @@
               </tr>
             </thead>
             <tbody>`;
-          
+
           data.crs.forEach(cr => {
             const date = new Date(cr.assignedAt).toLocaleString();
             html += `<tr>
@@ -668,7 +722,7 @@
               <td>${date}</td>
             </tr>`;
           });
-          
+
           html += `</tbody></table>`;
           document.getElementById('crList').innerHTML = html;
         } else {
@@ -680,7 +734,7 @@
     }
 
     // Unlock attendance
-    function unlockAttendance() {
+    async function unlockAttendance() {
       const courseId = document.getElementById('unlockCourseId').value;
       const section = document.getElementById('unlockSection').value;
       const date = document.getElementById('unlockDate').value;
@@ -691,14 +745,25 @@
       }
 
       document.getElementById('unlockStatus').innerHTML = '<div class="alert info">⏳ Unlocking...</div>';
-      
-      setTimeout(() => {
-        document.getElementById('unlockStatus').innerHTML = `<div class="alert success">✅ Attendance unlocked for Course ${courseId}, Section ${section}, Date ${date}</div>`;
-      }, 1000);
+
+      try {
+        const url = `${API_URL}?action=unlockAttendance&secret=${SECRET}&courseId=${courseId}&section=${section}&date=${date}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.ok) {
+          document.getElementById('unlockStatus').innerHTML = `<div class="alert success">✅ Attendance unlocked for Course ${courseId}, Section ${section}, Date ${date}</div>`;
+        } else {
+          document.getElementById('unlockStatus').innerHTML = `<div class="alert error">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        document.getElementById('unlockStatus').innerHTML = `<div class="alert error">❌ Error: ${err.message}</div>`;
+      }
     }
 
+
     // Add student
-    function addStudent() {
+    async function addStudent() {
       const courseId = document.getElementById('addCourseId').value;
       const section = document.getElementById('addSection').value;
       const regNo = document.getElementById('addRegNo').value;
@@ -710,11 +775,25 @@
       }
 
       document.getElementById('addStatus').innerHTML = '<div class="alert info">⏳ Adding student...</div>';
-      
-      setTimeout(() => {
-        document.getElementById('addStatus').innerHTML = `<div class="alert success">✅ Student ${name} (${regNo}) added to Course ${courseId}, Section ${section}</div>`;
-      }, 1000);
+
+      try {
+        const url = `${API_URL}?action=addStudent&secret=${SECRET}&courseId=${courseId}&section=${section}&regNo=${encodeURIComponent(regNo)}&name=${encodeURIComponent(name)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.ok) {
+          document.getElementById('addStatus').innerHTML = `<div class="alert success">✅ Student ${name} (${regNo}) added to Course ${courseId}, Section ${section}</div>`;
+          // Clear fields
+          document.getElementById('addRegNo').value = '';
+          document.getElementById('addName').value = '';
+        } else {
+          document.getElementById('addStatus').innerHTML = `<div class="alert error">❌ Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        document.getElementById('addStatus').innerHTML = `<div class="alert error">❌ Error: ${err.message}</div>`;
+      }
     }
+
 
     // Load initial stats
     window.addEventListener('DOMContentLoaded', () => {
@@ -722,4 +801,5 @@
     });
   </script>
 </body>
+
 </html>
