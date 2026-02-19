@@ -873,10 +873,32 @@
         secret: ROSTER_SECRET
       });
 
-      const res = await fetch(`${ROSTER_URL}?${params.toString()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const url = `${ROSTER_URL}?${params.toString()}`;
 
-      const data = await res.json();
+      // Google Apps Script redirects can return HTML in cross-origin contexts
+      // We need to handle this explicitly
+      let text;
+      try {
+        const res = await fetch(url, { redirect: 'follow' });
+        text = await res.text();
+      } catch (e) {
+        throw new Error('Network error: ' + e.message);
+      }
+
+      // If the response is HTML (GAS redirect page), extract the actual data URL
+      let data;
+      if (text.trim().startsWith('{')) {
+        // Direct JSON response
+        data = JSON.parse(text);
+      } else if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+        // GAS returned an HTML redirect page — try to extract the URL
+        console.warn('GAS returned HTML instead of JSON. Attempting workaround...');
+        console.log('Response preview:', text.substring(0, 200));
+        throw new Error('Google Apps Script returned HTML. Open your GAS project → Deploy → Manage deployments → Edit → Set "Who has access" to "Anyone" → Save.');
+      } else {
+        throw new Error('Unexpected response format');
+      }
+
       if (!data.ok) throw new Error(data.error || 'Failed to fetch CR list');
 
       const crs = data.crs || [];
