@@ -324,22 +324,26 @@ function doPost(e) {
     try {
       const payload = JSON.parse(e.postData.contents);
       
-      // Store JSON
+      // Store JSON in Drive
       const fileName = `attendance_${payload.date}_${payload.section}.json`;
       const file = DriveApp.createFile(fileName, JSON.stringify(payload, null, 2), MimeType.PLAIN_TEXT);
       
-      // Send email to faculty (Update email address as needed)
-      // Note: Using a placeholder email or checking if user provided one in config would be better, 
-      // but using the one from docs for now.
-      const facultyEmail = 'muhammadJawad@comsats.edu.pk'; 
+      // Use faculty email from payload, fall back to default
+      const facultyEmail = payload.facultyEmail || 'muhammadJawad@comsats.edu.pk';
+      const crEmail = payload.crEmail || '';
       
-      GmailApp.sendEmail(facultyEmail, 
-        `Attendance Submitted: ${payload.course} - Section ${payload.section}`,
-        `Attendance for ${payload.date} is ready for review.\n\nStudents Marked: ${payload.students.length}`,
-        { attachments: [file] }
-      );
+      const subject = `Attendance Submitted: ${payload.course} - Section ${payload.section} - ${payload.date}`;
+      const body = `Attendance for ${payload.date} has been submitted by CR: ${crEmail}\n\nCourse: ${payload.course}\nSection: ${payload.section}\nDate: ${payload.date}\nStudents: ${payload.students ? payload.students.length : 'N/A'}\n\nAttachment contains the full attendance JSON.`;
       
-      return ContentService.createTextOutput(JSON.stringify({ success: true }))
+      // Send to faculty
+      GmailApp.sendEmail(facultyEmail, subject, body, { attachments: [file] });
+      
+      // Also send confirmation to the CR if email provided
+      if (crEmail && crEmail !== facultyEmail) {
+        GmailApp.sendEmail(crEmail, `[Confirmation] ${subject}`, `Your attendance submission was successful.\n\n${body}`);
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify({ success: true, fileName: fileName }))
         .setMimeType(ContentService.MimeType.JSON);
         
     } catch (error) {
@@ -348,5 +352,6 @@ function doPost(e) {
     }
   }
   
-  return ContentService.createTextOutput(JSON.stringify({ error: "Invalid action" }));
+  return ContentService.createTextOutput(JSON.stringify({ error: "Invalid action" }))
+    .setMimeType(ContentService.MimeType.JSON);
 }

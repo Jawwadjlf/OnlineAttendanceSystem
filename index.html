@@ -1267,14 +1267,21 @@
       sendEmail.disabled = true;
 
       try {
-        await fetch(APPSCRIPT_URL, {
+        const res = await fetch(`${APPSCRIPT_URL}?action=submitAttendance`, {
           method: 'POST',
-          body: JSON.stringify(payload),
-          headers: { 'Content-Type': 'application/json' },
-          mode: 'no-cors'
+          body: JSON.stringify(payload)
         });
 
-        emailStatus.textContent = '✅ Submitted! Email sent to you and faculty.';
+        // GAS POST returns opaque or JSON — treat any completion as success
+        let result = { success: true };
+        try {
+          const text = await res.text();
+          if (text.trim().startsWith('{')) result = JSON.parse(text);
+        } catch (_) { }
+
+        if (result.success === false) throw new Error(result.error || 'Submission failed');
+
+        emailStatus.textContent = '✅ Submitted! Email sent to faculty.';
 
         locked = true;
         statusBadge.textContent = '🔒 Locked';
